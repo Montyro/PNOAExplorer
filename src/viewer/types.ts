@@ -1,4 +1,4 @@
-export type ColorMap = 'terrain' | 'viridis' | 'turbo' | 'grayscale'
+export type ColorMap = 'terrain' | 'viridis' | 'turbo' | 'grayscale' | 'detail-local' | 'detail-global' | 'detail-manual'
 export type SurfaceMode = 'surface' | 'ground'
 export type CloudData = {
   positions: Float32Array

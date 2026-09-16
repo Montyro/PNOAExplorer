@@ -34,6 +34,22 @@ try {
   await page.waitForFunction(() => document.querySelector('#viewer').dataset.rendering === 'ready')
   const groundChecksum = await checksum()
   await page.screenshot({ path: 'artifacts/loaded.png', fullPage: true })
+  await page.locator('#layer-mode').selectOption('both')
+  await page.locator('#lidar-opacity').fill('55')
+  await page.waitForTimeout(3000)
+  await page.screenshot({ path: 'artifacts/layers.png', fullPage: true })
+  const layerState = await page.evaluate(async () => {
+    const viewer = (await import('/src/main.ts')).viewer
+    const layers = viewer.map.getLayers().getArray()
+    return {
+      projection: viewer.map.getView().getProjection().getCode(),
+      center: viewer.map.getView().getCenter(),
+      origin: JSON.parse(document.querySelector('#viewer').dataset.origin),
+      orthophotoVisible: layers[0].getVisible(),
+      lidarVisible: layers[1].getVisible(),
+      lidarOpacity: layers[1].getOpacity(),
+    }
+  })
   const report = await page.evaluate(() => ({
     status: document.querySelector('#status-title')?.textContent,
     detail: document.querySelector('#status-detail')?.textContent,
@@ -46,8 +62,9 @@ try {
     colormapChanged: terrainChecksum !== viridisChecksum,
     groundModelChanged: viridisChecksum !== groundChecksum,
   }
-  console.log(JSON.stringify({ report, interactions, errors }, null, 2))
-  if (report.status !== 'Mapa preparado' || !interactions.colormapChanged || !interactions.groundModelChanged || errors.length) process.exitCode = 1
+  console.log(JSON.stringify({ report, interactions, layerState, errors }, null, 2))
+  const alignedCenter = Math.hypot(layerState.center[0] - layerState.origin[0], layerState.center[1] - layerState.origin[1]) < 20
+  if (report.status !== 'Mapa preparado' || !interactions.colormapChanged || !interactions.groundModelChanged || layerState.projection !== 'EPSG:25830' || !layerState.orthophotoVisible || !layerState.lidarVisible || layerState.lidarOpacity !== .55 || !alignedCenter || errors.length) process.exitCode = 1
 } finally {
   await browser.close()
 }

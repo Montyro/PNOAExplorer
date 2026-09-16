@@ -12,7 +12,7 @@ import { fromLonLat, toLonLat } from 'ol/proj.js'
 import { datasetForCoordinate, projectCoordinate } from './data/datasets'
 import { loadCatalog, nearbyCatalogItems } from './data/catalog'
 import { inspectCandidates, loadCloud } from './data/cloud'
-import { MapViewer } from './viewer/MapViewer'
+import { MapViewer, type LayerMode } from './viewer/MapViewer'
 import type { ColorMap, SurfaceMode } from './viewer/types'
 
 const formatNumber = new Intl.NumberFormat('es-ES')
@@ -27,6 +27,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       </header>
       <div class="viewer-hint"><span>Arrastrar</span> desplazar · <span>Rueda / doble clic</span> acercar<br><span id="view-detail">Detalle y contraste adaptados al área visible</span></div>
       <button id="fit-view" class="fit-view" type="button">Encuadrar zona</button>
+      <button id="new-spot" class="new-spot" type="button" disabled>New spot</button>
       <div id="elevation-legend" class="elevation-legend" title="Contraste local: percentiles 2–98 de las celdas visibles. Los valores extremos se saturan."><span id="legend-max">—</span><i id="legend-ramp"></i><span id="legend-min">—</span><small>Elevación · vista</small></div>
       <div class="scale-chip"><i></i><span id="cloud-summary">Introduce una coordenada para comenzar</span></div>
     </section>
@@ -64,8 +65,21 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 
         <section class="controls-card">
           <label>Modelo<select id="surface-mode"><option value="surface">Superficie DSM</option><option value="ground">Terreno · clase 2</option></select></label>
-          <label>Colormap<select id="color-mode"><option value="terrain">Terreno</option><option value="viridis">Viridis</option><option value="turbo">Turbo</option><option value="grayscale">Escala de grises</option></select></label>
+          <label>Colormap<select id="color-mode"><option value="terrain">Terreno</option><option value="viridis">Viridis</option><option value="detail-local">Detail local</option><option value="detail-global">Detail global</option><option value="detail-manual">Detail manual</option><option value="turbo">Turbo</option><option value="grayscale">Escala de grises</option></select></label>
         </section>
+        <section class="layer-card">
+          <label>Vista<select id="layer-mode"><option value="lidar">LiDAR</option><option value="both">LiDAR + ortofoto</option><option value="orthophoto">Ortofoto PNOA</option></select></label>
+          <label id="lidar-opacity-control" class="range-label compact" hidden><span>Opacidad LiDAR <output id="lidar-opacity-output">65 %</output></span><input id="lidar-opacity" type="range" min="0" max="100" step="5" value="65"></label>
+        </section>
+        <form id="detail-range" class="detail-range" hidden>
+          <p>Rango de elevación · Detail</p>
+          <div class="coordinate-grid">
+            <label>Mínimo (m)<input id="detail-min" type="number" step="any" placeholder="Automático" required></label>
+            <label>Máximo (m)<input id="detail-max" type="number" step="any" placeholder="Automático" required></label>
+          </div>
+          <div class="range-actions"><button type="submit">Aplicar rango</button><button type="button" id="detail-auto">Rango completo</button></div>
+          <small id="detail-range-status" aria-live="polite">Rango completo de la zona. Los valores fuera del intervalo usan los colores de los extremos.</small>
+        </form>
       </div>
       <footer>Datos IGN–CNIG · CC BY 4.0 <span>·</span> COPC por Flai</footer>
     </aside>
@@ -109,6 +123,8 @@ const map = new Map({
 
 export const viewer = new MapViewer(document.querySelector('#viewer')!)
 document.querySelector('#fit-view')!.addEventListener('click', () => viewer.resetView())
+const searchForm = document.querySelector<HTMLFormElement>('#search-form')!
+const newSpotButton = document.querySelector<HTMLButtonElement>('#new-spot')!
 
 function updateCoordinate(longitude: number, latitude: number, moveMap = true) {
   longitudeInput.value = longitude.toFixed(6)
@@ -117,6 +133,13 @@ function updateCoordinate(longitude: number, latitude: number, moveMap = true) {
   marker.setGeometry(new Point(coordinate))
   if (moveMap) map.getView().animate({ center: coordinate, duration: 350 })
 }
+
+newSpotButton.addEventListener('click', () => {
+  const coordinate = viewer.getCenterLonLat()
+  if (!coordinate) return
+  updateCoordinate(coordinate[0], coordinate[1])
+  searchForm.requestSubmit()
+})
 
 map.on('click', (event) => {
   const [longitude, latitude] = toLonLat(event.coordinate)
@@ -130,8 +153,45 @@ function setStatus(kind: 'idle' | 'loading' | 'success' | 'error', title: string
 }
 
 radiusInput.addEventListener('input', () => (radiusOutput.value = `${radiusInput.value} m`))
+const layerModeInput = document.querySelector<HTMLSelectElement>('#layer-mode')!
+const lidarOpacityControl = document.querySelector<HTMLElement>('#lidar-opacity-control')!
+const lidarOpacityInput = document.querySelector<HTMLInputElement>('#lidar-opacity')!
+const lidarOpacityOutput = document.querySelector<HTMLOutputElement>('#lidar-opacity-output')!
+layerModeInput.addEventListener('change', () => {
+  const mode = layerModeInput.value as LayerMode
+  lidarOpacityControl.hidden = mode !== 'both'
+  viewer.setLayerMode(mode)
+})
+lidarOpacityInput.addEventListener('input', () => {
+  lidarOpacityOutput.value = `${lidarOpacityInput.value} %`
+  viewer.setLidarOpacity(Number(lidarOpacityInput.value) / 100)
+})
+const detailRangeForm = document.querySelector<HTMLFormElement>('#detail-range')!
+const detailMin = document.querySelector<HTMLInputElement>('#detail-min')!
+const detailMax = document.querySelector<HTMLInputElement>('#detail-max')!
+const detailRangeStatus = document.querySelector<HTMLElement>('#detail-range-status')!
+for (const input of [detailMin, detailMax]) input.addEventListener('input', () => detailMax.setCustomValidity(''))
+detailRangeForm.addEventListener('submit', (event) => {
+  event.preventDefault()
+  const low = detailMin.valueAsNumber, high = detailMax.valueAsNumber
+  if (!Number.isFinite(low) || !Number.isFinite(high) || low >= high) {
+    detailMax.setCustomValidity('El máximo debe ser mayor que el mínimo.')
+    detailMax.reportValidity()
+    return
+  }
+  viewer.setDetailRange([low, high])
+  detailRangeStatus.textContent = `Rango aplicado: ${low.toLocaleString('es-ES')}–${high.toLocaleString('es-ES')} m. Los valores fuera del intervalo usan los colores de los extremos.`
+})
+document.querySelector('#detail-auto')!.addEventListener('click', () => {
+  detailRangeForm.reset()
+  detailMax.setCustomValidity('')
+  viewer.setDetailRange(null)
+  detailRangeStatus.textContent = 'Rango completo de la zona. Los valores fuera del intervalo usan los colores de los extremos.'
+})
 document.querySelector<HTMLSelectElement>('#color-mode')!.addEventListener('change', (event) => {
-  viewer.setColorMap((event.target as HTMLSelectElement).value as ColorMap)
+  const color = (event.target as HTMLSelectElement).value as ColorMap
+  detailRangeForm.hidden = color !== 'detail-manual'
+  viewer.setColorMap(color)
 })
 document.querySelector<HTMLSelectElement>('#surface-mode')!.addEventListener('change', (event) => {
   viewer.setSurfaceMode((event.target as HTMLSelectElement).value as SurfaceMode)
@@ -139,7 +199,7 @@ document.querySelector<HTMLSelectElement>('#surface-mode')!.addEventListener('ch
 latitudeInput.addEventListener('change', () => updateCoordinate(Number(longitudeInput.value), Number(latitudeInput.value)))
 longitudeInput.addEventListener('change', () => updateCoordinate(Number(longitudeInput.value), Number(latitudeInput.value)))
 
-document.querySelector<HTMLFormElement>('#search-form')!.addEventListener('submit', async (event) => {
+searchForm.addEventListener('submit', async (event) => {
   event.preventDefault()
   const latitude = Number(latitudeInput.value)
   const longitude = Number(longitudeInput.value)
@@ -147,6 +207,7 @@ document.querySelector<HTMLFormElement>('#search-form')!.addEventListener('submi
   if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return
 
   loadButton.disabled = true
+  newSpotButton.disabled = true
   loadButton.querySelector('span')!.textContent = 'Preparando…'
   viewer.clear()
   datasetCard.classList.add('hidden')
@@ -172,7 +233,8 @@ document.querySelector<HTMLFormElement>('#search-form')!.addEventListener('submi
     if (!cloud.pointCount) throw new Error('La consulta no devolvió puntos dentro del radio elegido.')
 
     setStatus('loading', 'Preparando niveles de detalle', 'Generando el mapa de elevaciones…')
-    await viewer.showCloud(cloud, radius)
+    await viewer.showCloud(cloud, radius, { epsg: dataset.epsg, centerX: center.x, centerY: center.y })
+    newSpotButton.disabled = false
     document.querySelector('#dataset-name')!.textContent = dataset.label
     document.querySelector('#dataset-years')!.textContent = dataset.years
     document.querySelector('#dataset-density')!.textContent = dataset.density

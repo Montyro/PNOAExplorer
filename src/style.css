@@ -3,6 +3,7 @@
 
 :root { color: #eef1ea; background: #080d0c; font-family: Manrope, system-ui, sans-serif; font-synthesis: none; }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body { margin: 0; min-width: 320px; min-height: 100vh; overflow: hidden; }
 button, input, select { font: inherit; }
 .shell { display: grid; grid-template-columns: minmax(0, 1fr) 420px; width: 100vw; height: 100vh; background: #080d0c; }
@@ -16,6 +17,8 @@ button, input, select { font: inherit; }
 .viewer .ol-zoom button { width: 36px; height: 36px; background: #202d27; color: #e6eedf; font-size: 23px; cursor: pointer; }
 .viewer .ol-scale-line { bottom: 92px; left: 28px; background: #101b16d9; }
 .fit-view { position: absolute; top: 196px; left: 30px; z-index: 3; border: 1px solid #425249; border-radius: 3px; padding: 9px; background: #111b16; color: #dfe9db; cursor: pointer; font-size: 11px; }
+.new-spot { position: absolute; top: 238px; left: 30px; z-index: 3; border: 1px solid #b8d94f; border-radius: 3px; padding: 9px 12px; background: #d9ff5d; color: #10140d; cursor: pointer; font-size: 11px; font-weight: 700; }
+.new-spot:disabled { border-color: #39443f; background: #202724; color: #6f7b77; cursor: default; }
 #view-detail { display: inline-block; margin-top: 8px; font-size: 10px; }
 .depth-canvas { cursor: grab; touch-action: none; image-rendering: auto; }
 .depth-canvas:active { cursor: grabbing; }
@@ -62,7 +65,7 @@ input[type='range']::-webkit-slider-thumb { appearance: none; width: 13px; heigh
 .map-wrap { height: 170px; margin-top: 22px; position: relative; overflow: hidden; border: 1px solid #2e3835; border-radius: 3px; background: #18201e; }
 .map { position: absolute; inset: 0; filter: saturate(.72) contrast(1.05) brightness(.78); }
 .map-label { position: absolute; right: 8px; top: 8px; z-index: 2; padding: 5px 7px; background: rgba(8,13,12,.75); color: #d2dbd6; font: 9px DM Mono, monospace; letter-spacing: .08em; text-transform: uppercase; pointer-events: none; }
-.dataset-card, .controls-card { margin-top: 14px; border: 1px solid #29332f; border-radius: 3px; padding: 16px; background: #0d1311; transition: opacity .25s; }
+.dataset-card, .controls-card, .layer-card { margin-top: 14px; border: 1px solid #29332f; border-radius: 3px; padding: 16px; background: #0d1311; transition: opacity .25s; }
 .dataset-card.hidden { display: none; }
 .dataset-card > div:first-child { padding-bottom: 13px; border-bottom: 1px solid #29332f; }
 .dataset-card span { display: block; margin-bottom: 5px; color: #67736f; font: 9px DM Mono, monospace; text-transform: uppercase; letter-spacing: .12em; }
@@ -71,6 +74,15 @@ input[type='range']::-webkit-slider-thumb { appearance: none; width: 13px; heigh
 .controls-card { display: grid; grid-template-columns: 1fr 1.15fr; gap: 16px; align-items: end; }
 .controls-card .compact { margin: 0; }
 .controls-card select { padding: 9px; font-size: 11px; }
+.layer-card { display: grid; gap: 14px; }
+.layer-card select { padding: 9px; font-size: 11px; }
+.layer-card .range-label { padding-top: 2px; }
+.detail-range { margin-top: 12px; padding: 16px; border: 1px solid #29332f; border-radius: 3px; background: #0d1311; }
+.detail-range p { margin: 0 0 14px; font-size: 12px; }
+.detail-range small { display: block; color: #899692; font-size: 10px; line-height: 1.6; }
+.range-actions { display: flex; gap: 8px; margin: 12px 0; }
+.range-actions button { padding: 9px; border: 1px solid #425249; border-radius: 3px; background: #202d27; color: #eef1ea; font-size: 11px; cursor: pointer; }
+.range-actions button[type='submit'] { color: #d9ff5d; }
 footer { flex: none; padding: 13px 38px; border-top: 1px solid #27302e; color: #59645f; font: 9px DM Mono, monospace; letter-spacing: .06em; text-transform: uppercase; }
 footer span { margin: 0 6px; }
 

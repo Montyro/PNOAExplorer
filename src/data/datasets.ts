@@ -1,4 +1,5 @@
 import proj4 from 'proj4'
+import { register } from 'ol/proj/proj4.js'
 
 export type Dataset = {
   id: string
@@ -50,6 +51,7 @@ proj4.defs('EPSG:25829', '+proj=utm +zone=29 +ellps=GRS80 +units=m +no_defs +typ
 proj4.defs('EPSG:25830', '+proj=utm +zone=30 +ellps=GRS80 +units=m +no_defs +type=crs')
 proj4.defs('EPSG:25831', '+proj=utm +zone=31 +ellps=GRS80 +units=m +no_defs +type=crs')
 proj4.defs('EPSG:4083', '+proj=utm +zone=28 +ellps=GRS80 +units=m +no_defs +type=crs')
+register(proj4)
 
 export function datasetForCoordinate(longitude: number, latitude: number): Dataset {
   if (latitude < 30) return datasets['EPSG:4083']
@@ -62,4 +64,3 @@ export function projectCoordinate(dataset: Dataset, longitude: number, latitude:
   const [x, y] = proj4('EPSG:4326', dataset.epsg, [longitude, latitude])
   return { x, y }
 }
-
