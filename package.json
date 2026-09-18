@@ -14,7 +14,8 @@
     "test:smoke": "node scripts/smoke.mjs",
     "test:navigation": "node scripts/navigation.mjs",
     "release:win": "npm run build && bun scripts/build-release.ts",
-    "test:release": "node scripts/release-smoke.mjs"
+    "test:release": "node scripts/release-smoke.mjs",
+    "capture:demo": "node scripts/capture-demo.mjs"
   },
   "dependencies": {
     "copc": "^0.0.7",

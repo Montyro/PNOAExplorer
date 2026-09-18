@@ -2,6 +2,8 @@
 
 Visor web cenital de las nubes de puntos LiDAR del Plan Nacional de Ortofotografía Aérea. Recibe una coordenada WGS84 y un radio, localiza las teselas que la rodean y genera un mapa de profundidad/elevación con los nodos COPC necesarios.
 
+![PNOAExplorer mostrando LiDAR y ortofoto del entorno del Teide](docs/demo.png)
+
 ## Ejecutar
 
 Requiere Node.js 20 o posterior.
