@@ -40,8 +40,8 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 
         <form id="search-form">
           <div class="coordinate-grid">
-            <label>Latitud<input id="latitude" type="number" step="any" min="27" max="44" value="40.43190101842764" required></label>
-            <label>Longitud<input id="longitude" type="number" step="any" min="-19" max="5" value="-2.6694763767013745" required></label>
+            <label>Latitud<input id="latitude" type="number" step="any" min="27" max="44" value="28.2724" required></label>
+            <label>Longitud<input id="longitude" type="number" step="any" min="-19" max="5" value="-16.6427" required></label>
           </div>
           <label class="range-label"><span>Radio de exploración <output id="radius-output">400 m</output></span><input id="radius" type="range" min="100" max="1000" step="50" value="400"></label>
           <button id="load-button" class="primary" type="submit"><span>Visualizar LiDAR</span><b>↗</b></button>
@@ -97,7 +97,7 @@ const loadButton = document.querySelector<HTMLButtonElement>('#load-button')!
 const datasetCard = document.querySelector<HTMLElement>('#dataset-card')!
 const cloudSummary = document.querySelector<HTMLElement>('#cloud-summary')!
 
-const initialCoordinate = [-2.6694763767013745, 40.43190101842764]
+const initialCoordinate = [-16.6427, 28.2724]
 const marker = new Feature({ geometry: new Point(fromLonLat(initialCoordinate)) })
 const markerSource = new VectorSource({ features: [marker] })
 const map = new Map({

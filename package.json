@@ -1,6 +1,9 @@
 {
-  "name": "pnoa-lidar-viewer",
+  "name": "pnoa-explorer",
   "version": "0.1.0",
+  "description": "Visor web local de PNOA LiDAR y ortofoto con LOD y mapas de elevación.",
+  "repository": "https://github.com/Montyro/PNOAExplorer.git",
+  "license": "PolyForm-Noncommercial-1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,7 +12,9 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:smoke": "node scripts/smoke.mjs",
-    "test:navigation": "node scripts/navigation.mjs"
+    "test:navigation": "node scripts/navigation.mjs",
+    "release:win": "npm run build && bun scripts/build-release.ts",
+    "test:release": "node scripts/release-smoke.mjs"
   },
   "dependencies": {
     "copc": "^0.0.7",

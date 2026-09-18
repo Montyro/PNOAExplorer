@@ -1,4 +1,4 @@
-# PNOA LiDAR Depth Map
+# PNOA Explorer
 
 Visor web cenital de las nubes de puntos LiDAR del Plan Nacional de Ortofotografía Aérea. Recibe una coordenada WGS84 y un radio, localiza las teselas que la rodean y genera un mapa de profundidad/elevación con los nodos COPC necesarios.
 
@@ -12,6 +12,17 @@ npm run dev
 ```
 
 Abre `http://127.0.0.1:5173`. La primera búsqueda en cada huso descarga el índice público y lo guarda en IndexedDB; las siguientes consultas lo reutilizan.
+
+## Ejecutable para Windows
+
+Para generar un único servidor portable de Windows:
+
+```powershell
+npm run release:win
+npm run test:release
+```
+
+Los artefactos quedan en `release/`: el ejecutable `PNOAExplorer-v<versión>-win-x64.exe` y `SHA256SUMS.txt`. El usuario solo necesita ejecutar el `.exe`, mantener abierta la consola y visitar `http://127.0.0.1:4173`. No necesita Node.js ni Bun instalados. Se puede elegir otro puerto con `--port 8080`.
 
 ## Funciones actuales
 
@@ -46,4 +57,8 @@ npm run test:smoke
 npm run test:navigation
 ```
 
-La prueba de navegador abre la coordenada `40.43190101842764, -2.6694763767013745`, resuelve cuatro teselas reales, decodifica los nodos LAZ y guarda capturas en `artifacts/`.
+La prueba de navegador abre la coordenada `28.2724, -16.6427`, en el entorno del Teide, usando la tercera cobertura PNOA-LiDAR de Canarias. Resuelve las teselas reales, decodifica los nodos LAZ y guarda capturas en `artifacts/`.
+
+## Licencia
+
+El código se publica bajo [PolyForm Noncommercial 1.0.0](LICENSE): se permite el uso, modificación y distribución para fines no comerciales. Cualquier uso comercial requiere obtener previamente una licencia separada contactando con [Montyro](https://github.com/Montyro). Los datos LiDAR y la ortofoto mantienen sus licencias y atribuciones propias, indicadas en la interfaz.
